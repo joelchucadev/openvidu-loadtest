@@ -2,7 +2,7 @@
 	"testcases": [
 		{
 			"typology": "TEACHING",
-			"participants": ["1:5"],
+			"participants": ["1:17"],
 			"sessions": "1",
 			"browserMode": "EMULATE",
 			"resolution": "640x480",

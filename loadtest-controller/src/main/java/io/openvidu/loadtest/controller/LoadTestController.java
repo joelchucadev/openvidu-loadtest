@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -233,11 +234,13 @@ public class LoadTestController {
 		initializeInstance(workerUrl, WorkerType.WORKER);
 		boolean overloaded = false;
 		currentWorkers.setCurrentWorkerUrl(workerUrl, WorkerType.WORKER);
-		int iteration = 0;
-		while (!overloaded) {
+		int iteration = 0;		
+		//while (!overloaded) {
 			// TODO: take into account recording workers
-			for (int i = 0; i < publishers; i++) {
-				CreateParticipantResponse response = browserEmulatorClient.createPublisher(iteration + i, 0, testCase);
+			log.info("Starting publisher creation.... " + publishers + " publishers");
+			int sessionNumber = new Random().nextInt(1000);
+			for (int i = 0; i < publishers; i++) {				
+				CreateParticipantResponse response = browserEmulatorClient.createPublisher(iteration + i, sessionNumber, testCase);
 				if (response.isResponseOk()) {
 					double cpu = response.getWorkerCpuPct();
 					if (cpu > loadTestConfig.getWorkerMaxLoad()) {
@@ -252,9 +255,10 @@ public class LoadTestController {
 				}
 			}
 			if (!overloaded) {
-				for (int i = 0; i < subscribers; i++) {
+				log.info("Starting publisher creation...." + subscribers + " subscribers");
+				for (int i = 0; i < subscribers; i++) {					
 					CreateParticipantResponse response = browserEmulatorClient.createSubscriber(
-							iteration + publishers + i, 0,
+							iteration + publishers + i, sessionNumber,
 							testCase);
 					if (response.isResponseOk()) {
 						double cpu = response.getWorkerCpuPct();
@@ -271,7 +275,7 @@ public class LoadTestController {
 				}
 			}
 			iteration++;
-		}
+		//} 
 		currentWorkers.setCurrentWorkerUrl("", WorkerType.WORKER);
 		browserEmulatorClient.disconnectAll(List.of(workerUrl));
 		return true;
@@ -349,7 +353,7 @@ public class LoadTestController {
 								PROD_MODE ? awsWorkersList.get(0).getPublicDnsName() : devWorkersList.get(0),
 								testCase, publishers, subscribers);
 					}
-					if (noEstimateError) {
+					if (noEstimateError && browserEstimation > 0) {
 						log.info("Starting test with N:M session typology");
 						log.info("The number of session that will be created are {}", testCase.getSessions());
 						log.info("Each session will be composed by {} users. {} Publisher and {} Subscribers",
